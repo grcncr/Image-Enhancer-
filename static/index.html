@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Enhancer</title>
+    <link href="https://fonts.cdnfonts.com/css/amazon-ember" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+            background: #0f0f0f;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 3rem 2rem;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .logo {
+            height: 48px;
+            margin-bottom: 0.75rem;
+        }
+
+        h1 {
+            font-family: 'Amazon Ember Display', 'Amazon Ember', -apple-system, sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        h1 span {
+            color: #FF6200;
+        }
+
+        .subtitle {
+            color: #888;
+            font-size: 1.05rem;
+            font-weight: 400;
+            max-width: 500px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed #333;
+            border-radius: 16px;
+            padding: 4rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 2.5rem;
+            background: #1a1a1a;
+        }
+
+        .upload-area:hover,
+        .upload-area.dragover {
+            border-color: #FF6200;
+            background: #1f1a14;
+        }
+
+        .upload-area p {
+            color: #888;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .upload-area p strong {
+            color: #e0e0e0;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .upload-hint {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.5rem 1.25rem;
+            background: #FF6200;
+            color: #fff;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        /* Editor Layout */
+        .editor-layout {
+            display: none;
+            gap: 2rem;
+        }
+
+        .editor-layout.visible {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+        }
+
+        /* Preview Panel */
+        .preview-panel {
+            background: #1a1a1a;
+            border-radius: 16px;
+            border: 1px solid #2a2a2a;
+            overflow: hidden;
+        }
+
+        .preview-header {
+            padding: 1rem 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        .preview-header h3 {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .live-badge {
+            font-size: 0.7rem;
+            font-weight: 600;
+            background: #FF6200;
+            color: #fff;
+            padding: 0.2rem 0.6rem;
+            border-radius: 10px;
+        }
+
+        .preview-panel canvas {
+            width: 100%;
+            height: 420px;
+            object-fit: contain;
+            display: block;
+            background: #111;
+        }
+
+        /* Controls Panel */
+        .controls-panel {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 16px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .control-section {
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        .control-section:last-of-type {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .control-section h3 {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.75rem;
+        }
+
+        .control-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            margin-bottom: 0.85rem;
+        }
+
+        .control-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .control-item label {
+            font-size: 0.8rem;
+            color: #e0e0e0;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .range-value {
+            font-size: 0.75rem;
+            color: #FF6200;
+            font-weight: 600;
+        }
+
+        .control-item input[type="range"] {
+            width: 100%;
+            height: 4px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: #333;
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .control-item input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #FF6200;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid #1a1a1a;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+        }
+
+        .control-item input[type="checkbox"] {
+            accent-color: #FF6200;
+            width: 15px;
+            height: 15px;
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background: #FF6200;
+            color: #0F1111;
+            border: none;
+            padding: 0.85rem 1.5rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s ease;
+            letter-spacing: -0.2px;
+        }
+
+        .btn-primary:hover {
+            background: #FF7A1A;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(255, 153, 0, 0.35);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-download {
+            background: transparent;
+            border: 2px solid #FF6200;
+            color: #FF6200;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s ease;
+        }
+
+        .btn-download:hover {
+            background: #FF6200;
+            color: #0F1111;
+        }
+
+        /* Format Toggle */
+        .format-toggle {
+            display: flex;
+            gap: 0;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #333;
+        }
+
+        .format-btn {
+            flex: 1;
+            padding: 0.5rem 0.75rem;
+            border: none;
+            background: #111;
+            color: #888;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .format-btn.active {
+            background: #FF6200;
+            color: #0F1111;
+        }
+
+        .format-btn:hover:not(.active) {
+            background: #222;
+            color: #ccc;
+        }
+
+        /* Progress */
+        .progress-bar {
+            display: none;
+            margin-top: 0.75rem;
+        }
+
+        .progress-bar.visible {
+            display: block;
+        }
+
+        .progress-track {
+            height: 3px;
+            background: #2a2a2a;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #FF6200;
+            border-radius: 2px;
+            animation: progress 1.5s ease-in-out infinite;
+            width: 30%;
+        }
+
+        @keyframes progress {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(400%); }
+        }
+
+        .status {
+            text-align: center;
+            color: #888;
+            font-size: 0.8rem;
+            margin-top: 0.5rem;
+        }
+
+        /* Result Section */
+        .result-section {
+            display: none;
+            margin-top: 2.5rem;
+        }
+
+        .result-section.visible {
+            display: block;
+        }
+
+        .result-section h2 {
+            font-family: 'Amazon Ember Display', 'Amazon Ember', -apple-system, sans-serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 1.25rem;
+            text-align: center;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .result-card {
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .result-card h3 {
+            padding: 0.75rem 1.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            border-bottom: 1px solid #2a2a2a;
+            background: #151515;
+        }
+
+        .result-card img {
+            width: 100%;
+            height: 320px;
+            object-fit: contain;
+            background: #111;
+            display: block;
+        }
+
+        .metadata {
+            font-size: 0.8rem;
+            color: #666;
+            text-align: center;
+            margin-top: 0.75rem;
+        }
+
+        .btn-auto {
+            background: transparent;
+            border: 1px solid #FF6200;
+            color: #FF6200;
+            padding: 0.3rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.2s;
+        }
+
+        .btn-auto:hover {
+            background: #FF6200;
+            color: #0F1111;
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 1.5rem 1rem; }
+            h1 { font-size: 1.75rem; }
+            .editor-layout.visible { grid-template-columns: 1fr; }
+            .result-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="/static/logo.png?v=2" alt="Image Enhancer" class="logo">
+        <p class="subtitle">AI-powered enhancement. Upscale to 4K, correct color, and sharpen — all in one click.</p>
+        <p style="color: #444; font-size: 0.75rem; margin-top: 0.5rem;">v2.1.0</p>
+    </header>
+
+    <div class="container">
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📷</div>
+            <p><strong>Drop an image here</strong> or click to browse</p>
+            <p>PNG, JPEG, or WebP</p>
+            <span class="upload-hint">Choose File</span>
+            <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp" hidden>
+        </div>
+
+        <div class="editor-layout" id="editorLayout">
+            <!-- Live Preview -->
+            <div class="preview-panel">
+                <div class="preview-header">
+                    <h3>Preview</h3>
+                    <span class="live-badge">Live</span>
+                </div>
+                <canvas id="liveCanvas"></canvas>
+            </div>
+
+            <!-- Controls Sidebar -->
+            <div class="controls-panel">
+                <div class="control-section">
+                    <div class="control-label-row" style="margin-bottom: 0.75rem;">
+                        <h3 style="margin-bottom: 0;">Adjustments</h3>
+                        <button class="btn-auto" id="autoBtn" title="Auto-analyze image and set recommended values">Auto</button>
+                    </div>
+                    <div class="control-item">
+                        <div class="control-label-row">
+                            <label>Brightness</label>
+                            <span class="range-value" id="brightnessValue">+3%</span>
+                        </div>
+                        <input type="range" id="brightness" min="80" max="120" value="103">
+                    </div>
+                    <div class="control-item">
+                        <div class="control-label-row">
+                            <label>Contrast</label>
+                            <span class="range-value" id="contrastValue">+8%</span>
+                        </div>
+                        <input type="range" id="contrast" min="80" max="140" value="108">
+                    </div>
+                    <div class="control-item">
+                        <div class="control-label-row">
+                            <label>Saturation</label>
+                            <span class="range-value" id="saturationValue">+15%</span>
+                        </div>
+                        <input type="range" id="saturationBoost" min="80" max="140" value="115">
+                    </div>
+                    <div class="control-item">
+                        <div class="control-label-row">
+                            <label>Warmth</label>
+                            <span class="range-value" id="warmthValue">+8</span>
+                        </div>
+                        <input type="range" id="warmth" min="0" max="30" value="8">
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <h3>Processing</h3>
+                    <div class="control-item">
+                        <label>
+                            <input type="checkbox" id="applyDenoise">
+                            Denoise
+                        </label>
+                        <input type="range" id="denoiseStrength" min="1" max="30" value="6">
+                        <span class="range-value" id="denoiseValue">Strength: 6</span>
+                    </div>
+                    <div class="control-item">
+                        <label>
+                            <input type="checkbox" id="applySharpen" checked>
+                            Sharpen
+                        </label>
+                        <input type="range" id="sharpenPasses" min="1" max="5" value="1">
+                        <span class="range-value" id="sharpenValue">Passes: 1</span>
+                    </div>
+                    <div class="control-item">
+                        <div class="control-label-row">
+                            <label>
+                                <input type="checkbox" id="applyUpscale" checked>
+                                AI Upscale
+                            </label>
+                            <span class="range-value" id="upscaleValue">4.0x</span>
+                        </div>
+                        <input type="range" id="upscaleFactor" min="10" max="40" value="40">
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <h3>Export</h3>
+                    <div class="control-item">
+                        <div class="format-toggle">
+                            <button type="button" class="format-btn active" data-format="png">PNG</button>
+                            <button type="button" class="format-btn" data-format="jpg">JPG</button>
+                        </div>
+                    </div>
+                    <div class="control-item" id="jpgQualityGroup" style="display:none;">
+                        <div class="control-label-row">
+                            <label>Quality</label>
+                            <span class="range-value" id="jpgQualityValue">92%</span>
+                        </div>
+                        <input type="range" id="jpgQuality" min="60" max="100" value="92">
+                    </div>
+                </div>
+
+                <button class="btn-primary" id="enhanceBtn">Enhance Image</button>
+                <div class="progress-bar" id="progressBar">
+                    <div class="progress-track">
+                        <div class="progress-fill"></div>
+                    </div>
+                </div>
+                <p class="status" id="status"></p>
+            </div>
+        </div>
+
+        <!-- Final Result -->
+        <div class="result-section" id="resultSection">
+            <h2>Results</h2>
+            <div class="result-grid">
+                <div class="result-card">
+                    <h3>Original</h3>
+                    <img id="originalResult" alt="Original">
+                </div>
+                <div class="result-card">
+                    <h3>Enhanced</h3>
+                    <img id="enhancedResult" alt="Enhanced">
+                </div>
+            </div>
+            <button class="btn-download" id="downloadBtn">Download Enhanced Image</button>
+            <p class="metadata" id="metadata"></p>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const editorLayout = document.getElementById('editorLayout');
+        const liveCanvas = document.getElementById('liveCanvas');
+        const ctx = liveCanvas.getContext('2d');
+        const enhanceBtn = document.getElementById('enhanceBtn');
+        const progressBar = document.getElementById('progressBar');
+        const status = document.getElementById('status');
+        const resultSection = document.getElementById('resultSection');
+        const originalResult = document.getElementById('originalResult');
+        const enhancedResult = document.getElementById('enhancedResult');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const metadata = document.getElementById('metadata');
+
+        let selectedFile = null;
+        let originalImage = null;
+        let enhancedBlob = null;
+        let selectedFormat = 'png';
+
+        // Upload
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+        uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+        });
+        fileInput.addEventListener('change', () => { if (fileInput.files.length) handleFile(fileInput.files[0]); });
+
+        function handleFile(file) {
+            if (!file.type.match(/^image\/(png|jpeg|webp)$/)) {
+                alert('Please upload a PNG, JPEG, or WebP image.');
+                return;
+            }
+            selectedFile = file;
+            resultSection.classList.remove('visible');
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    originalImage = img;
+                    editorLayout.classList.add('visible');
+                    uploadArea.innerHTML = `
+                        <div class="upload-icon">✅</div>
+                        <p><strong>${file.name}</strong></p>
+                        <p>${(file.size / 1024).toFixed(0)} KB · ${img.width} × ${img.height}</p>
+                        <span class="upload-hint">Change File</span>
+                    `;
+                    // Auto-analyze and set recommended sliders
+                    const recommendations = analyzeImage(img);
+                    applyRecommendations(recommendations);
+                };
+                img.src = e.target.result;
+                originalResult.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // --- Live Preview ---
+        function updateLivePreview() {
+            if (!originalImage) return;
+
+            const brightness = parseInt(document.getElementById('brightness').value) / 100;
+            const contrast = parseInt(document.getElementById('contrast').value) / 100;
+            const saturation = parseInt(document.getElementById('saturationBoost').value) / 100;
+            const warmth = parseInt(document.getElementById('warmth').value);
+
+            const maxW = liveCanvas.parentElement.clientWidth;
+            const maxH = 420;
+            const scale = Math.min(maxW / originalImage.width, maxH / originalImage.height, 1);
+            const drawW = Math.round(originalImage.width * scale);
+            const drawH = Math.round(originalImage.height * scale);
+
+            liveCanvas.width = drawW;
+            liveCanvas.height = drawH;
+            liveCanvas.style.height = drawH + 'px';
+
+            ctx.filter = `brightness(${brightness}) contrast(${contrast}) saturate(${saturation})`;
+            ctx.drawImage(originalImage, 0, 0, drawW, drawH);
+            ctx.filter = 'none';
+
+            if (warmth > 0) {
+                const imageData = ctx.getImageData(0, 0, drawW, drawH);
+                const data = imageData.data;
+                for (let i = 0; i < data.length; i += 4) {
+                    data[i] = Math.min(255, data[i] + warmth);
+                    data[i + 2] = Math.max(0, data[i + 2] - warmth * 0.4);
+                }
+                ctx.putImageData(imageData, 0, 0);
+            }
+        }
+
+        // Bind live sliders
+        ['brightness', 'contrast', 'saturationBoost', 'warmth'].forEach(id => {
+            document.getElementById(id).addEventListener('input', () => {
+                updateLivePreview();
+                updateLabels();
+            });
+        });
+
+        function updateLabels() {
+            const b = document.getElementById('brightness').value;
+            document.getElementById('brightnessValue').textContent = `${b >= 100 ? '+' : ''}${b - 100}%`;
+            const c = document.getElementById('contrast').value;
+            document.getElementById('contrastValue').textContent = `${c >= 100 ? '+' : ''}${c - 100}%`;
+            const s = document.getElementById('saturationBoost').value;
+            document.getElementById('saturationValue').textContent = `${s >= 100 ? '+' : ''}${s - 100}%`;
+            document.getElementById('warmthValue').textContent = `+${document.getElementById('warmth').value}`;
+        }
+
+        // Processing sliders
+        document.getElementById('denoiseStrength').addEventListener('input', (e) => {
+            document.getElementById('denoiseValue').textContent = `Strength: ${e.target.value}`;
+        });
+        document.getElementById('sharpenPasses').addEventListener('input', (e) => {
+            document.getElementById('sharpenValue').textContent = `Passes: ${e.target.value}`;
+        });
+        document.getElementById('upscaleFactor').addEventListener('input', (e) => {
+            document.getElementById('upscaleValue').textContent = `${(e.target.value / 10).toFixed(1)}x`;
+        });
+
+        // --- Auto Analyze ---
+        document.getElementById('autoBtn').addEventListener('click', () => {
+            if (!originalImage) return;
+            const recommendations = analyzeImage(originalImage);
+            applyRecommendations(recommendations);
+        });
+
+        function analyzeImage(img) {
+            // Draw image to a small canvas for fast pixel analysis
+            const analyzeCanvas = document.createElement('canvas');
+            const size = 200; // Downsample for speed
+            const scale = Math.min(size / img.width, size / img.height);
+            const w = Math.round(img.width * scale);
+            const h = Math.round(img.height * scale);
+            analyzeCanvas.width = w;
+            analyzeCanvas.height = h;
+            const actx = analyzeCanvas.getContext('2d');
+            actx.drawImage(img, 0, 0, w, h);
+            const imageData = actx.getImageData(0, 0, w, h);
+            const data = imageData.data;
+            const totalPixels = w * h;
+
+            // Calculate average brightness, saturation, and color temperature
+            let totalBrightness = 0;
+            let totalSaturation = 0;
+            let totalR = 0, totalG = 0, totalB = 0;
+            let noiseScore = 0;
+
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i], g = data[i + 1], b = data[i + 2];
+                
+                // Brightness (perceived luminance)
+                const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+                totalBrightness += lum;
+
+                // Saturation (simple HSL-style)
+                const max = Math.max(r, g, b);
+                const min = Math.min(r, g, b);
+                const sat = max === 0 ? 0 : (max - min) / max;
+                totalSaturation += sat;
+
+                // Color channels for warmth detection
+                totalR += r;
+                totalG += g;
+                totalB += b;
+            }
+
+            const avgBrightness = totalBrightness / totalPixels; // 0-255
+            const avgSaturation = totalSaturation / totalPixels; // 0-1
+            const avgR = totalR / totalPixels;
+            const avgG = totalG / totalPixels;
+            const avgB = totalB / totalPixels;
+
+            // Calculate contrast (standard deviation of luminance)
+            let varianceSum = 0;
+            for (let i = 0; i < data.length; i += 4) {
+                const lum = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+                varianceSum += (lum - avgBrightness) ** 2;
+            }
+            const stdDev = Math.sqrt(varianceSum / totalPixels);
+
+            // Estimate noise (local variance in small patches)
+            let localVarianceSum = 0;
+            let patches = 0;
+            const patchSize = 4;
+            for (let y = 0; y < h - patchSize; y += patchSize) {
+                for (let x = 0; x < w - patchSize; x += patchSize) {
+                    let patchMean = 0;
+                    let count = 0;
+                    for (let py = 0; py < patchSize; py++) {
+                        for (let px = 0; px < patchSize; px++) {
+                            const idx = ((y + py) * w + (x + px)) * 4;
+                            patchMean += 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
+                            count++;
+                        }
+                    }
+                    patchMean /= count;
+                    let patchVar = 0;
+                    for (let py = 0; py < patchSize; py++) {
+                        for (let px = 0; px < patchSize; px++) {
+                            const idx = ((y + py) * w + (x + px)) * 4;
+                            const lum = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
+                            patchVar += (lum - patchMean) ** 2;
+                        }
+                    }
+                    localVarianceSum += patchVar / count;
+                    patches++;
+                }
+            }
+            const avgLocalVariance = localVarianceSum / patches;
+
+            // --- Generate Recommendations ---
+            const rec = {};
+
+            // Brightness: target ~130 avg luminance
+            if (avgBrightness < 90) rec.brightness = 112; // dark image, boost more
+            else if (avgBrightness < 110) rec.brightness = 106;
+            else if (avgBrightness > 180) rec.brightness = 95; // too bright, pull back
+            else rec.brightness = 102;
+
+            // Contrast: target stdDev ~55
+            if (stdDev < 35) rec.contrast = 120; // flat image
+            else if (stdDev < 50) rec.contrast = 112;
+            else if (stdDev > 75) rec.contrast = 95; // already punchy
+            else rec.contrast = 105;
+
+            // Saturation: target avg ~0.35
+            if (avgSaturation < 0.15) rec.saturation = 135; // very desaturated
+            else if (avgSaturation < 0.25) rec.saturation = 120;
+            else if (avgSaturation > 0.5) rec.saturation = 95; // already saturated
+            else rec.saturation = 110;
+
+            // Warmth: based on blue vs red balance
+            const warmthBalance = avgR - avgB;
+            if (warmthBalance < -10) rec.warmth = 15; // cool image, add warmth
+            else if (warmthBalance < 5) rec.warmth = 10;
+            else if (warmthBalance > 30) rec.warmth = 2; // already warm
+            else rec.warmth = 6;
+
+            // Denoise: based on local variance (noise estimate)
+            if (avgLocalVariance > 200) {
+                rec.denoise = true;
+                rec.denoiseStrength = Math.min(20, Math.round(avgLocalVariance / 25));
+            } else {
+                rec.denoise = false;
+                rec.denoiseStrength = 6;
+            }
+
+            return rec;
+        }
+
+        function applyRecommendations(rec) {
+            // Set slider values
+            document.getElementById('brightness').value = rec.brightness;
+            document.getElementById('contrast').value = rec.contrast;
+            document.getElementById('saturationBoost').value = rec.saturation;
+            document.getElementById('warmth').value = rec.warmth;
+            document.getElementById('applyDenoise').checked = rec.denoise;
+            document.getElementById('denoiseStrength').value = rec.denoiseStrength;
+
+            // Update labels and preview
+            updateLabels();
+            document.getElementById('denoiseValue').textContent = `Strength: ${rec.denoiseStrength}`;
+            updateLivePreview();
+        }
+
+        // Format
+        document.querySelectorAll('.format-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.format-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedFormat = btn.dataset.format;
+                document.getElementById('jpgQualityGroup').style.display = selectedFormat === 'jpg' ? 'flex' : 'none';
+            });
+        });
+        document.getElementById('jpgQuality').addEventListener('input', (e) => {
+            document.getElementById('jpgQualityValue').textContent = `${e.target.value}%`;
+        });
+
+        // Enhance
+        enhanceBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            enhanceBtn.disabled = true;
+            progressBar.classList.add('visible');
+            status.textContent = 'Enhancing with AI...';
+            resultSection.classList.remove('visible');
+
+            const brightness = (parseInt(document.getElementById('brightness').value) / 100).toFixed(2);
+            const contrast = (parseInt(document.getElementById('contrast').value) / 100).toFixed(2);
+            const saturation = (parseInt(document.getElementById('saturationBoost').value) / 100).toFixed(2);
+            const warmth = document.getElementById('warmth').value;
+
+            const formData = new FormData();
+            formData.append('image', selectedFile);
+            formData.append('denoise_strength', document.getElementById('denoiseStrength').value);
+            formData.append('sharpen_passes', document.getElementById('sharpenPasses').value);
+            formData.append('upscale_factor', (document.getElementById('upscaleFactor').value / 10).toFixed(1));
+            formData.append('saturation_boost', saturation);
+            formData.append('brightness', brightness);
+            formData.append('contrast', contrast);
+            formData.append('warmth', warmth);
+            formData.append('apply_denoise', document.getElementById('applyDenoise').checked);
+            formData.append('apply_sharpen', document.getElementById('applySharpen').checked);
+            formData.append('apply_upscale', document.getElementById('applyUpscale').checked);
+            formData.append('apply_color', 'true');
+            formData.append('output_format', selectedFormat);
+            formData.append('jpg_quality', document.getElementById('jpgQuality').value);
+
+            try {
+                const response = await fetch('/enhance', { method: 'POST', body: formData });
+                if (!response.ok) throw new Error(`Enhancement failed: ${response.statusText}`);
+
+                enhancedBlob = await response.blob();
+                enhancedResult.src = URL.createObjectURL(enhancedBlob);
+
+                const origW = response.headers.get('X-Original-Width');
+                const origH = response.headers.get('X-Original-Height');
+                const newW = response.headers.get('X-Enhanced-Width');
+                const newH = response.headers.get('X-Enhanced-Height');
+                const fmt = response.headers.get('X-Output-Format') || selectedFormat;
+                metadata.textContent = `${origW} × ${origH}  →  ${newW} × ${newH}  ·  ${fmt.toUpperCase()}  ·  ${(enhancedBlob.size / 1024 / 1024).toFixed(1)} MB`;
+
+                resultSection.classList.add('visible');
+                status.textContent = '';
+            } catch (err) {
+                status.textContent = `Error: ${err.message}`;
+            } finally {
+                progressBar.classList.remove('visible');
+                enhanceBtn.disabled = false;
+            }
+        });
+
+        // Download
+        downloadBtn.addEventListener('click', () => {
+            if (!enhancedBlob) return;
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(enhancedBlob);
+            a.download = `enhanced_image.${selectedFormat}`;
+            a.click();
+        });
+    </script>
+
+    <footer style="margin-top: 3rem; text-align: center; color: #444; font-size: 0.75rem;">
+    </footer>
+</body>
+</html>
